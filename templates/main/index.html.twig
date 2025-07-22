@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mind Map{% endblock %}
+
+{% block body %}
+  <div id="mindmap"></div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  {{ encore_entry_script_tags('app') }}
+{% endblock %}

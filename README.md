@@ -41,3 +41,19 @@ cd whereismymind.netxi.in
 composer install
 npm install
 npm run dev
+
+---
+File structure:
+Frontend
+/assets
+    /components       — Reusable React components
+        EditableNode.jsx — Editable node component (input, buttons)
+        MindMap.jsx      — Mind map component (renders nodes/edges)
+    /hooks            — Custom React hooks
+        useMindMapLogic.js — Tree logic: add, remove, layout
+    /utils            — Utility functions
+        layout.js         — Node positioning calculations
+        treeHelpers.js    — Tree operations (height, removal, etc.)
+    /styles           — Project styles
+        app.css           — Styles for nodes and UI
+    app.js            — Entry point: renders `MindMap`, imports styles

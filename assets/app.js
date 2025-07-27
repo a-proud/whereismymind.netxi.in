@@ -1,5 +1,4 @@
 import './styles/app.css';
-
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -12,7 +11,7 @@ import ReactFlow, {
   applyNodeChanges,
 } from 'react-flow-renderer';
 
-function EditableNode({ id, data, addNodeNextTo }) {
+function EditableNode({ id, data, addChildNode }) {
   const [label, setLabel] = useState(data.label);
 
   return (
@@ -23,6 +22,7 @@ function EditableNode({ id, data, addNodeNextTo }) {
         borderRadius: 5,
         background: '#fff',
         position: 'relative',
+        minWidth: 120,
       }}
     >
       <input
@@ -31,11 +31,11 @@ function EditableNode({ id, data, addNodeNextTo }) {
         style={{ width: '100%', border: 'none', outline: 'none' }}
       />
       <button
-        onClick={() => addNodeNextTo(id)}
-        title="Добавить ноду справа"
+        onClick={() => addChildNode(id)}
+        title="Добавить под-ноду"
         style={{
           position: 'absolute',
-          top: 5,
+          bottom: 5,
           right: 5,
           padding: '2px 6px',
           cursor: 'pointer',
@@ -47,8 +47,8 @@ function EditableNode({ id, data, addNodeNextTo }) {
       >
         ➕
       </button>
-      <Handle type="source" position={Position.Right} />
-      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="target" position={Position.Top} />
     </div>
   );
 }
@@ -57,18 +57,15 @@ const initialNodes = [
   {
     id: '1',
     type: 'editable',
-    data: { label: 'Блок 1' },
-    position: { x: 100, y: 100 },
-  },
-  {
-    id: '2',
-    type: 'editable',
-    data: { label: 'Блок 2' },
-    position: { x: 300, y: 100 },
+    data: { label: 'Главная нода' },
+    position: { x: 250, y: 50 },
+    parentId: null,
+    level: 0,
+    subtreeHeight: 1, // кол-во всех поднод + 1 (себя)
   },
 ];
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
+const initialEdges = [];
 
 function MindMap() {
   const [nodes, setNodes] = useState(initialNodes);
@@ -78,45 +75,100 @@ function MindMap() {
     (changes) => {
       setNodes((nds) => applyNodeChanges(changes, nds));
     },
-    [setNodes]
+    []
   );
 
-  const addNodeNextTo = useCallback(
-    (id) => {
-      setNodes((nds) => {
-        const node = nds.find((n) => n.id === id);
-        if (!node) return nds;
+  const updateSubtreeHeights = (nodes, parentId) => {
+    // рекурсивный перерасчет высот поддеревьев
+    const children = nodes.filter((n) => n.parentId === parentId);
+    let height = 1;
 
-        const maxId = nds.reduce((max, n) => Math.max(max, Number(n.id)), 0);
-        const newId = (maxId + 1).toString();
+    for (const child of children) {
+      height += updateSubtreeHeights(nodes, child.id);
+    }
 
-        const newPosition = { x: node.position.x + 150, y: node.position.y };
+    const nodeIndex = nodes.findIndex((n) => n.id === parentId);
+    if (nodeIndex >= 0) {
+      nodes[nodeIndex] = {
+        ...nodes[nodeIndex],
+        subtreeHeight: height,
+      };
+    }
 
-        const newNode = {
-          id: newId,
-          type: 'editable',
-          data: { label: `Блок ${newId}` },
-          position: newPosition,
-        };
+    return height;
+  };
 
-        // Добавляем ребро от родителя к новой ноде
-        setEdges((eds) => [
-          ...eds,
-          { id: `e${id}-${newId}`, source: id, target: newId },
-        ]);
+  const layoutSubtree = (nodes, rootId, startX, startY) => {
+    const layouted = [...nodes];
+    const spacingY = 100;
+    const spacingX = 200;
 
-        return [...nds, newNode];
-      });
-    },
-    [setNodes, setEdges]
-  );
+    const recurse = (id, x, y) => {
+      const nodeIndex = layouted.findIndex((n) => n.id === id);
+      if (nodeIndex === -1) return y;
 
-  // Мемозируем nodeTypes, чтобы не создавать объект каждый рендер
+      const node = layouted[nodeIndex];
+      layouted[nodeIndex] = {
+        ...node,
+        position: { x, y },
+      };
+
+      const children = layouted
+        .filter((n) => n.parentId === id)
+        .sort((a, b) => a.id.localeCompare(b.id));
+
+      let offsetY = y;
+      for (const child of children) {
+        offsetY = recurse(child.id, x + spacingX, offsetY + spacingY);
+      }
+
+      return offsetY;
+    };
+
+    recurse(rootId, startX, startY);
+    return layouted;
+  };
+
+  const addChildNode = useCallback((parentId) => {
+    setNodes((prevNodes) => {
+      const parent = prevNodes.find((n) => n.id === parentId);
+      if (!parent) return prevNodes;
+
+      const newId = (Math.max(0, ...prevNodes.map((n) => +n.id)) + 1).toString();
+
+      const newNode = {
+        id: newId,
+        type: 'editable',
+        data: { label: `Нода ${newId}` },
+        position: { x: 0, y: 0 }, // будет пересчитано
+        parentId,
+        level: parent.level + 1,
+        subtreeHeight: 1,
+      };
+
+      const newNodes = [...prevNodes, newNode];
+
+      updateSubtreeHeights(newNodes, '1'); // предполагаем, что '1' — корень
+      const layoutedNodes = layoutSubtree(newNodes, '1', 250, 50);
+
+      setEdges((prevEdges) => [
+        ...prevEdges,
+        {
+          id: `e${parentId}-${newId}`,
+          source: parentId,
+          target: newId,
+        },
+      ]);
+
+      return layoutedNodes;
+    });
+  }, []);
+
   const nodeTypes = useMemo(() => {
     return {
-      editable: (props) => <EditableNode {...props} addNodeNextTo={addNodeNextTo} />,
+      editable: (props) => <EditableNode {...props} addChildNode={addChildNode} />,
     };
-  }, [addNodeNextTo]);
+  }, [addChildNode]);
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>

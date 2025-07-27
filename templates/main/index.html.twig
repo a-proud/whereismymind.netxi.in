@@ -4,6 +4,31 @@
 
 {% block body %}
   <div id="mindmap"></div>
+  <div
+  class="modal fade"
+  id="globalEditModal"
+  tabIndex="-1"
+  aria-labelledby="globalEditModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="globalEditModalLabel">Редактирование узла</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <p>Тут будет ИИ и варианты</p>
+        <textarea class="form-control" rows="4" placeholder="Введите ответ..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block javascripts %}

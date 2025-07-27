@@ -11,7 +11,7 @@ import ReactFlow, {
   applyNodeChanges,
 } from 'react-flow-renderer';
 
-function EditableNode({ id, data, addChildNode }) {
+function EditableNode({ id, data, addChildNode, removeNode }) {
   const [label, setLabel] = useState(data.label);
 
   return (
@@ -30,23 +30,39 @@ function EditableNode({ id, data, addChildNode }) {
         onChange={(e) => setLabel(e.target.value)}
         style={{ width: '100%', border: 'none', outline: 'none' }}
       />
-      <button
-        onClick={() => addChildNode(id)}
-        title="Добавить под-ноду"
-        style={{
-          position: 'absolute',
-          bottom: 5,
-          right: 5,
-          padding: '2px 6px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          borderRadius: 3,
-          border: '1px solid #555',
-          background: '#eee',
-        }}
-      >
-        ➕
-      </button>
+      <div style={{ position: 'absolute', bottom: 5, right: 5, display: 'flex', gap: 5 }}>
+        <button
+          onClick={() => addChildNode(id)}
+          title="Добавить под-ноду"
+          style={{
+            padding: '2px 6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            borderRadius: 3,
+            border: '1px solid #555',
+            background: '#eee',
+          }}
+        >
+          ➕
+        </button>
+        {!data.isRoot && (
+          <button
+            onClick={() => removeNode(id)}
+            title="Удалить ноду"
+            style={{
+              padding: '2px 6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              borderRadius: 3,
+              border: '1px solid #a00',
+              background: '#fdd',
+              color: '#a00',
+            }}
+          >
+            ❌
+          </button>
+        )}
+      </div>
       <Handle type="source" position={Position.Bottom} />
       <Handle type="target" position={Position.Top} />
     </div>
@@ -57,11 +73,11 @@ const initialNodes = [
   {
     id: '1',
     type: 'editable',
-    data: { label: 'Главная нода' },
+    data: { label: 'Главная нода', isRoot: true },
     position: { x: 250, y: 50 },
     parentId: null,
     level: 0,
-    subtreeHeight: 1, // кол-во всех поднод + 1 (себя)
+    subtreeHeight: 1,
   },
 ];
 
@@ -79,7 +95,6 @@ function MindMap() {
   );
 
   const updateSubtreeHeights = (nodes, parentId) => {
-    // рекурсивный перерасчет высот поддеревьев
     const children = nodes.filter((n) => n.parentId === parentId);
     let height = 1;
 
@@ -139,8 +154,8 @@ function MindMap() {
       const newNode = {
         id: newId,
         type: 'editable',
-        data: { label: `Нода ${newId}` },
-        position: { x: 0, y: 0 }, // будет пересчитано
+        data: { label: `Нода ${newId}`, isRoot: false },
+        position: { x: 0, y: 0 },
         parentId,
         level: parent.level + 1,
         subtreeHeight: 1,
@@ -148,7 +163,7 @@ function MindMap() {
 
       const newNodes = [...prevNodes, newNode];
 
-      updateSubtreeHeights(newNodes, '1'); // предполагаем, что '1' — корень
+      updateSubtreeHeights(newNodes, '1');
       const layoutedNodes = layoutSubtree(newNodes, '1', 250, 50);
 
       setEdges((prevEdges) => [
@@ -164,11 +179,40 @@ function MindMap() {
     });
   }, []);
 
+  const removeNode = useCallback((nodeId) => {
+    setNodes((prevNodes) => {
+      const idsToRemove = new Set();
+      const collect = (id) => {
+        idsToRemove.add(id);
+        prevNodes
+          .filter((n) => n.parentId === id)
+          .forEach((n) => collect(n.id));
+      };
+      collect(nodeId);
+
+      const remainingNodes = prevNodes.filter((n) => !idsToRemove.has(n.id));
+      setEdges((prevEdges) =>
+        prevEdges.filter(
+          (e) => !idsToRemove.has(e.source) && !idsToRemove.has(e.target)
+        )
+      );
+
+      updateSubtreeHeights(remainingNodes, '1');
+      return layoutSubtree(remainingNodes, '1', 250, 50);
+    });
+  }, []);
+
   const nodeTypes = useMemo(() => {
     return {
-      editable: (props) => <EditableNode {...props} addChildNode={addChildNode} />,
+      editable: (props) => (
+        <EditableNode
+          {...props}
+          addChildNode={addChildNode}
+          removeNode={removeNode}
+        />
+      ),
     };
-  }, [addChildNode]);
+  }, [addChildNode, removeNode]);
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>

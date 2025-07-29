@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 
-export function EditableNode({ id, data, addChildNode, removeNode }) {
+export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }) {
   const [label, setLabel] = useState(data.label);
   const textareaRef = useRef(null);
+
+  useEffect(() => {
+    setLabel(data.label);
+  }, [data.label]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -20,18 +24,18 @@ export function EditableNode({ id, data, addChildNode, removeNode }) {
     <div className="editable-node">
       <textarea
         ref={textareaRef}
+        value={label}
         onChange={(e) => setLabel(e.target.value)}
         className="node-textarea"
         rows={3}
-        placeholder={label}
+        placeholder="Insert text here..."
       />
       <div className="editable-node__buttons">
         <button
-            className="editable-node__btn editable-node__btn--edit"
-            data-bs-toggle="modal"
-            data-bs-target="#globalEditModal"
-            >
-            ✏️
+          className="editable-node__btn editable-node__btn--edit"
+          onClick={() => onEditClick(label, id)}
+        >
+          ✏️
         </button>
         <button
           className="editable-node__btn"

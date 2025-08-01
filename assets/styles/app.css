@@ -50,3 +50,96 @@ body {
 .editable-node__btn--remove:hover {
   background-color: #fbb;
 }
+
+.editable-node__btn--save {
+  border-color: #28a745;
+  background: #d4edda;
+  color: #155724;
+}
+
+.editable-node__btn--save:hover {
+  background-color: #c3e6cb;
+}
+
+.editable-node__btn--save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.node-data {
+  min-height: 60px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  outline: none;
+  background-color: white;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.node-data:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.node-data[contenteditable="true"]:empty:before {
+  content: attr(placeholder);
+  color: #6c757d;
+  font-style: italic;
+}
+
+.node-data .label {
+  min-height: 40px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+}
+
+.node-data .context {
+  min-height: 30px;
+  font-size: 0.9em;
+  color: #666;
+  font-style: italic;
+}
+
+.node-data .label:empty:before {
+  content: attr(placeholder);
+  color: #6c757d;
+  font-style: italic;
+}
+
+.node-data .context:empty:before {
+  content: attr(placeholder);
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Стили для модального окна */
+.modal .node-data {
+  min-height: 120px;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.modal .node-data .label {
+  min-height: 60px;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+
+.modal .node-data .context {
+  min-height: 40px;
+  font-size: 0.9em;
+  color: #666;
+  font-style: italic;
+}

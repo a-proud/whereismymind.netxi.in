@@ -15,11 +15,13 @@ export function MindMap() {
   } = useMindMapLogic();
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalText, setModalText] = useState('');
+  const [modalLabel, setModalLabel] = useState('');
+  const [modalContext, setModalContext] = useState('');
   const [activeNodeId, setActiveNodeId] = useState(null);
 
-  const openModal = (text, nodeId) => {
-    setModalText(text);
+  const openModal = (data, nodeId) => {
+    setModalLabel(data.label || '');
+    setModalContext(data.context || '');
     setActiveNodeId(nodeId);
     setModalVisible(true);
   };
@@ -30,14 +32,22 @@ export function MindMap() {
     setNodes((prev) =>
       prev.map((node) =>
         node.id === activeNodeId
-          ? { ...node, data: { ...node.data, label: modalText } }
+          ? { 
+              ...node, 
+              data: { 
+                ...node.data, 
+                label: modalLabel,
+                context: modalContext
+              } 
+            }
           : node
       )
     );
 
     setModalVisible(false);
     setActiveNodeId(null);
-    setModalText('');
+    setModalLabel('');
+    setModalContext('');
   };
 
   const nodeTypes = useMemo(
@@ -87,15 +97,25 @@ export function MindMap() {
                   onClick={() => setModalVisible(false)}
                 ></button>
               </div>
-              <div className="modal-body">
-                <textarea
-                  className="form-control"
-                  value={modalText}
-                  onChange={(e) => setModalText(e.target.value)}
-                  rows={4}
-                  autoFocus
-                />
-              </div>
+                              <div className="modal-body">
+                  <div className="node-data">
+                    <div
+                      className="label"
+                      contentEditable={true}
+                      dangerouslySetInnerHTML={{ __html: modalLabel }}
+                      onInput={(e) => setModalLabel(e.currentTarget.innerHTML)}
+                      placeholder="Основной текст..."
+                      autoFocus
+                    />
+                    <div
+                      className="context"
+                      contentEditable={true}
+                      dangerouslySetInnerHTML={{ __html: modalContext }}
+                      onInput={(e) => setModalContext(e.currentTarget.innerHTML)}
+                      placeholder="Контекст..."
+                    />
+                  </div>
+                </div>
               <div className="modal-footer">
                 <button
                   type="button"

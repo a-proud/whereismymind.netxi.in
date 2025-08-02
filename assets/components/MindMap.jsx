@@ -127,22 +127,11 @@ export function MindMap() {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Edit</h5>
-                <div className="modal-header-buttons">
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={handleAiRequest}
-                    disabled={isAiLoading}
-                    title="Ask AI"
-                  >
-                    {isAiLoading ? '⏳' : '❓'} Ask AI
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setModalVisible(false)}
-                  ></button>
-                </div>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setModalVisible(false)}
+                ></button>
               </div>
                               <div className="modal-body">
                   {/* AI Section */}
@@ -176,14 +165,28 @@ export function MindMap() {
                   
                   {/* Node Data Section */}
                   <div className="node-data">
-                    <textarea
-                      className="body"
-                      value={modalBody}
-                      onChange={handleModalInput(setModalBody)}
-                      rows={4}
-                      placeholder="Detailed information..."
-                      autoFocus
-                    />
+                    <div className="body-section">
+                      <div className="body-header">
+                        <label>Detailed Information</label>
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={handleAiRequest}
+                          disabled={isAiLoading}
+                          title="Ask AI"
+                        >
+                          {isAiLoading ? '⏳' : '❓'} Ask AI
+                        </button>
+                      </div>
+                      <textarea
+                        className="body"
+                        value={modalBody}
+                        onChange={handleModalInput(setModalBody)}
+                        rows={4}
+                        placeholder="Detailed information..."
+                        autoFocus
+                      />
+                    </div>
                     <textarea
                       className="context"
                       value={modalContext}

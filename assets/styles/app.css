@@ -242,13 +242,25 @@ body {
   color: #1976d2;
 }
 
-/* Modal Header Buttons */
-.modal-header-buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Body Section */
+.body-section {
+  margin-bottom: 16px;
 }
 
-.modal-header-buttons .btn {
-  margin-right: 8px;
+.body-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.body-header label {
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+}
+
+.body-header .btn {
+  font-size: 0.85em;
+  padding: 4px 8px;
 }

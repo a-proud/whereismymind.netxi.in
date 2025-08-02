@@ -27,4 +27,30 @@ final class NodeController extends AbstractController
             'timestamp' => new \DateTime()
         ]);
     }
+
+    #[Route('/ai-request', name: 'api_ai_request', methods: ['POST'])]
+    public function aiRequest(Request $request): JsonResponse
+    {
+        // Get data from request
+        $data = json_decode($request->getContent(), true);
+        
+        // Log received data for debugging
+        error_log('Received AI request: ' . json_encode($data, JSON_PRETTY_PRINT));
+        
+        // Mock response with question and options
+        $mockResponse = [
+            'status' => 'success',
+            'question' => 'What type of application are you building?',
+            'options' => [
+                'Web application',
+                'Mobile application', 
+                'Desktop application',
+                'API/Backend service'
+            ],
+            'node_id' => $data['node_id'] ?? null,
+            'response_type' => $data['response_type'] ?? 'options'
+        ];
+        
+        return new JsonResponse($mockResponse);
+    }
 } 

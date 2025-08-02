@@ -66,6 +66,21 @@ body {
   cursor: not-allowed;
 }
 
+.editable-node__btn--ai {
+  border-color: #007bff;
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.editable-node__btn--ai:hover {
+  background-color: #bee5eb;
+}
+
+.editable-node__btn--ai:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .node-data {
   min-height: 60px;
   border: 1px solid #ddd;

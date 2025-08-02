@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { api } from '../utils/api';
 
-export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }) {
+export function EditableNode({ id, data, addChildNode, removeNode, onEditClick, onAiRequest }) {
   const [label, setLabel] = useState(data.label || '');
   const [context, setContext] = useState(data.context || '');
   const [body, setBody] = useState(data.body || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -45,6 +46,23 @@ export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }
     }
   };
 
+  const handleAiRequest = async () => {
+    setIsAiLoading(true);
+    try {
+      const result = await api.aiRequest(id, 'options');
+      console.log('AI response:', result);
+      
+      // Show AI response in alert for now
+      const options = result.options.join('\n• ');
+      alert(`AI Question: ${result.question}\n\nOptions:\n• ${options}`);
+    } catch (error) {
+      console.error('Failed to get AI response:', error);
+      alert('Error getting AI response!');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   useEffect(() => {
     const editableDiv = textareaRef.current;
     if (!editableDiv) return;
@@ -80,6 +98,14 @@ export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }
           onClick={() => onEditClick({ label, context, body }, id)}
         >
           ✏️
+        </button>
+        <button
+          className="editable-node__btn editable-node__btn--ai"
+          onClick={handleAiRequest}
+          disabled={isAiLoading}
+          title="Ask AI"
+        >
+          {isAiLoading ? '⏳' : '❓'}
         </button>
         <button
           className="editable-node__btn editable-node__btn--save"

@@ -51,5 +51,36 @@ export const api = {
         }
         
         return context;
+    },
+
+    /**
+     * Sends AI request for node
+     * @param {string} nodeId - node ID
+     * @param {string} responseType - 'text' or 'options'
+     * @returns {Promise<Object>} - AI response
+     */
+    async aiRequest(nodeId, responseType = 'options') {
+        try {
+            const response = await fetch('/api/nodes/ai-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    node_id: nodeId,
+                    response_type: responseType
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error making AI request:', error);
+            throw error;
+        }
     }
 }; 

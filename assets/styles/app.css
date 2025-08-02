@@ -190,3 +190,65 @@ body {
   background: transparent;
   font-family: inherit;
 }
+
+/* AI Section Styles */
+.ai-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.ai-question {
+  margin-bottom: 16px;
+}
+
+.ai-question h6 {
+  color: #495057;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.ai-question p {
+  font-size: 1.1em;
+  color: #333;
+  margin-bottom: 0;
+}
+
+.ai-options h6 {
+  color: #495057;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.ai-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-option-btn {
+  text-align: left;
+  padding: 12px 16px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.95em;
+}
+
+.ai-option-btn:hover {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+  color: #1976d2;
+}
+
+/* Modal Header Buttons */
+.modal-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-header-buttons .btn {
+  margin-right: 8px;
+}

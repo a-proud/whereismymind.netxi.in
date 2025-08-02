@@ -1,8 +1,9 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import ReactFlow, { Background } from 'react-flow-renderer';
 
 import { EditableNode } from './EditableNode';
 import { useMindMapLogic } from '../hooks/useMindMapLogic';
+import { api } from '../utils/api';
 
 export function MindMap() {
   const {
@@ -20,11 +21,10 @@ export function MindMap() {
   const [modalBody, setModalBody] = useState('');
   const [activeNodeId, setActiveNodeId] = useState(null);
 
-  // AI modal state
-  const [aiModalVisible, setAiModalVisible] = useState(false);
+  // AI state
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiOptions, setAiOptions] = useState([]);
-  const [aiNodeId, setAiNodeId] = useState(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
 
 
@@ -34,20 +34,31 @@ export function MindMap() {
     setter(e.target.value);
   };
 
-  const openModal = (data, nodeId) => {
+  const openModal = useCallback((data, nodeId) => {
     setModalLabel(data.label || '');
     setModalContext(data.context || '');
     setModalBody(data.body || '');
     setActiveNodeId(nodeId);
     setModalVisible(true);
-  };
+  }, []);
 
-  const openAiModal = (question, options, nodeId) => {
-    setAiQuestion(question);
-    setAiOptions(options);
-    setAiNodeId(nodeId);
-    setAiModalVisible(true);
-  };
+  const handleAiRequest = useCallback(async () => {
+    if (!activeNodeId) return;
+    
+    setIsAiLoading(true);
+    try {
+      const result = await api.aiRequest(activeNodeId, 'options');
+      console.log('AI response:', result);
+      
+      setAiQuestion(result.question);
+      setAiOptions(result.options);
+    } catch (error) {
+      console.error('Failed to get AI response:', error);
+      alert('Error getting AI response!');
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, [activeNodeId]);
 
   const handleModalSave = () => {
     if (!activeNodeId) return;
@@ -83,11 +94,10 @@ export function MindMap() {
           addChildNode={addChildNode}
           removeNode={removeNode}
           onEditClick={openModal}
-          onAiRequest={openAiModal}
         />
       ),
     }),
-    [addChildNode, removeNode, openAiModal]
+    [addChildNode, removeNode, openModal]
   );
 
   return (
@@ -117,13 +127,54 @@ export function MindMap() {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Edit</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setModalVisible(false)}
-                ></button>
+                <div className="modal-header-buttons">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={handleAiRequest}
+                    disabled={isAiLoading}
+                    title="Ask AI"
+                  >
+                    {isAiLoading ? '⏳' : '❓'} Ask AI
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setModalVisible(false)}
+                  ></button>
+                </div>
               </div>
                               <div className="modal-body">
+                  {/* AI Section */}
+                  {aiQuestion && (
+                    <div className="ai-section">
+                      <div className="ai-question">
+                        <h6>AI Question:</h6>
+                        <p>{aiQuestion}</p>
+                      </div>
+                      <div className="ai-options">
+                        <h6>Options:</h6>
+                        <div className="ai-options-grid">
+                          {aiOptions.map((option, index) => (
+                            <button
+                              key={index}
+                              className="btn btn-outline-primary ai-option-btn"
+                              onClick={() => {
+                                console.log('Selected option:', option);
+                                setModalBody(prev => prev + '\n\n' + option);
+                                setAiQuestion('');
+                                setAiOptions([]);
+                              }}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Node Data Section */}
                   <div className="node-data">
                     <textarea
                       className="body"
@@ -171,64 +222,6 @@ export function MindMap() {
       )}
 
       {modalVisible && <div className="modal-backdrop fade show"></div>}
-
-      {/* AI Modal */}
-      {aiModalVisible && (
-        <div
-          className="modal fade show"
-          id="aiModal"
-          style={{ display: 'block' }}
-          tabIndex="-1"
-          role="dialog"
-        >
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">AI Assistant</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setAiModalVisible(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="ai-question">
-                  <h6>Question:</h6>
-                  <p>{aiQuestion}</p>
-                </div>
-                <div className="ai-options">
-                  <h6>Options:</h6>
-                  <div className="ai-options-grid">
-                    {aiOptions.map((option, index) => (
-                      <button
-                        key={index}
-                        className="btn btn-outline-primary ai-option-btn"
-                        onClick={() => {
-                          console.log('Selected option:', option);
-                          setAiModalVisible(false);
-                        }}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setAiModalVisible(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {aiModalVisible && <div className="modal-backdrop fade show"></div>}
     </>
   );
 }

@@ -5,13 +5,21 @@ import { api } from '../utils/api';
 export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }) {
   const [label, setLabel] = useState(data.label || '');
   const [context, setContext] = useState(data.context || '');
+  const [body, setBody] = useState(data.body || '');
   const [isSaving, setIsSaving] = useState(false);
   const textareaRef = useRef(null);
 
   useEffect(() => {
     setLabel(data.label || '');
     setContext(data.context || '');
-  }, [data.label, data.context]);
+    setBody(data.body || '');
+  }, [data.label, data.context, data.body]);
+
+
+
+  const handleInput = (setter) => (e) => {
+    setter(e.target.value);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -20,17 +28,18 @@ export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }
         id,
         label,
         context,
+        body,
         timestamp: new Date().toISOString()
       };
       
       const result = await api.saveNode(nodeData);
       console.log('Node saved successfully:', result);
       
-      // Можно добавить уведомление об успешном сохранении
-      alert('Нода успешно сохранена!');
+      // Can add notification for successful save
+      alert('Node saved successfully!');
     } catch (error) {
       console.error('Failed to save node:', error);
-      alert('Ошибка при сохранении ноды!');
+      alert('Error saving node!');
     } finally {
       setIsSaving(false);
     }
@@ -49,26 +58,26 @@ export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }
 
   return (
     <div className="editable-node">
-            <div ref={textareaRef} className="node-data">
-        <div
+                  <div ref={textareaRef} className="node-data">
+        <textarea
           className="label"
-          contentEditable={true}
-          dangerouslySetInnerHTML={{ __html: label }}
-          onInput={(e) => setLabel(e.currentTarget.innerHTML)}
-          placeholder="Основной текст..."
+          value={label}
+          onChange={handleInput(setLabel)}
+          rows={2}
+          placeholder="Label..."
         />
-        <div
+        <textarea
           className="context"
-          contentEditable={true}
-          dangerouslySetInnerHTML={{ __html: context }}
-          onInput={(e) => setContext(e.currentTarget.innerHTML)}
-          placeholder="Контекст..."
+          value={context}
+          onChange={handleInput(setContext)}
+          rows={1}
+          placeholder="Context..."
         />
       </div>
       <div className="editable-node__buttons">
         <button
           className="editable-node__btn editable-node__btn--edit"
-          onClick={() => onEditClick({ label, context }, id)}
+          onClick={() => onEditClick({ label, context, body }, id)}
         >
           ✏️
         </button>

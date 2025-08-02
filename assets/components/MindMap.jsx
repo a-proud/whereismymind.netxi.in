@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import ReactFlow, { Background } from 'react-flow-renderer';
 
 import { EditableNode } from './EditableNode';
@@ -17,11 +17,21 @@ export function MindMap() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLabel, setModalLabel] = useState('');
   const [modalContext, setModalContext] = useState('');
+  const [modalBody, setModalBody] = useState('');
   const [activeNodeId, setActiveNodeId] = useState(null);
+
+
+
+
+
+  const handleModalInput = (setter) => (e) => {
+    setter(e.target.value);
+  };
 
   const openModal = (data, nodeId) => {
     setModalLabel(data.label || '');
     setModalContext(data.context || '');
+    setModalBody(data.body || '');
     setActiveNodeId(nodeId);
     setModalVisible(true);
   };
@@ -37,7 +47,8 @@ export function MindMap() {
               data: { 
                 ...node.data, 
                 label: modalLabel,
-                context: modalContext
+                context: modalContext,
+                body: modalBody
               } 
             }
           : node
@@ -48,6 +59,7 @@ export function MindMap() {
     setActiveNodeId(null);
     setModalLabel('');
     setModalContext('');
+    setModalBody('');
   };
 
   const nodeTypes = useMemo(
@@ -90,7 +102,7 @@ export function MindMap() {
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Редактировать</h5>
+                <h5 className="modal-title">Edit</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -99,20 +111,27 @@ export function MindMap() {
               </div>
                               <div className="modal-body">
                   <div className="node-data">
-                    <div
-                      className="label"
-                      contentEditable={true}
-                      dangerouslySetInnerHTML={{ __html: modalLabel }}
-                      onInput={(e) => setModalLabel(e.currentTarget.innerHTML)}
-                      placeholder="Основной текст..."
+                    <textarea
+                      className="body"
+                      value={modalBody}
+                      onChange={handleModalInput(setModalBody)}
+                      rows={4}
+                      placeholder="Detailed information..."
                       autoFocus
                     />
-                    <div
+                    <textarea
                       className="context"
-                      contentEditable={true}
-                      dangerouslySetInnerHTML={{ __html: modalContext }}
-                      onInput={(e) => setModalContext(e.currentTarget.innerHTML)}
-                      placeholder="Контекст..."
+                      value={modalContext}
+                      onChange={handleModalInput(setModalContext)}
+                      rows={2}
+                      placeholder="Context..."
+                    />
+                    <textarea
+                      className="label"
+                      value={modalLabel}
+                      onChange={handleModalInput(setModalLabel)}
+                      rows={1}
+                      placeholder="Label..."
                     />
                   </div>
                 </div>
@@ -122,14 +141,14 @@ export function MindMap() {
                   className="btn btn-secondary"
                   onClick={() => setModalVisible(false)}
                 >
-                  Отмена
+                  Cancel
                 </button>
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={handleModalSave}
                 >
-                  Сохранить
+                  Save
                 </button>
               </div>
             </div>

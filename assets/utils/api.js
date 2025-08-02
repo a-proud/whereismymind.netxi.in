@@ -1,8 +1,8 @@
 export const api = {
     /**
-     * Сохраняет данные ноды на сервер
-     * @param {Object} nodeData - данные ноды
-     * @returns {Promise<Object>} - ответ сервера
+     * Saves node data to server
+     * @param {Object} nodeData - node data
+     * @returns {Promise<Object>} - server response
      */
     async saveNode(nodeData) {
         try {
@@ -27,10 +27,10 @@ export const api = {
     },
 
     /**
-     * Получает полный контекст ноды включая родителей
-     * @param {Array} nodes - массив всех нод
-     * @param {string} nodeId - ID ноды
-     * @returns {string} - полный контекст
+     * Gets full context of node including parents
+     * @param {Array} nodes - array of all nodes
+     * @param {string} nodeId - node ID
+     * @returns {string} - full context
      */
     getFullContext(nodes, nodeId) {
         const node = nodes.find(n => n.id === nodeId);
@@ -39,7 +39,7 @@ export const api = {
         let context = node.data.context || '';
         let parentId = node.parentId;
         
-        // Добавляем контекст всех родителей
+        // Add context of all parents
         while (parentId) {
             const parent = nodes.find(n => n.id === parentId);
             if (parent) {

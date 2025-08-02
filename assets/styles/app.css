@@ -85,37 +85,40 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.node-data[contenteditable="true"]:empty:before {
-  content: attr(placeholder);
-  color: #6c757d;
-  font-style: italic;
-}
-
 .node-data .label {
-  min-height: 40px;
+  width: 100%;
+  min-height: 35px;
+  font-size: 1em;
+  color: #333;
+  font-weight: bold;
   border-bottom: 1px solid #eee;
   margin-bottom: 8px;
   padding-bottom: 8px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
 }
 
 .node-data .context {
-  min-height: 30px;
-  font-size: 0.9em;
+  width: 100%;
+  min-height: 25px;
+  font-size: 0.85em;
   color: #666;
   font-style: italic;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
 }
 
-.node-data .label:empty:before {
-  content: attr(placeholder);
-  color: #6c757d;
-  font-style: italic;
-}
 
-.node-data .context:empty:before {
-  content: attr(placeholder);
-  color: #6c757d;
-  font-style: italic;
-}
+
+
+
+
 
 /* Стили для модального окна */
 .modal .node-data {
@@ -130,16 +133,45 @@ body {
   overflow-wrap: break-word;
 }
 
-.modal .node-data .label {
-  min-height: 60px;
+.modal .node-data .body {
+  width: 100%;
+  min-height: 80px;
   border-bottom: 1px solid #dee2e6;
   margin-bottom: 12px;
   padding-bottom: 12px;
+  font-size: 0.95em;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
 }
 
 .modal .node-data .context {
+  width: 100%;
   min-height: 40px;
   font-size: 0.9em;
   color: #666;
   font-style: italic;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+}
+
+.modal .node-data .label {
+  width: 100%;
+  min-height: 30px;
+  font-size: 0.85em;
+  color: #888;
+  font-weight: bold;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
 }

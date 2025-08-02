@@ -7,9 +7,10 @@ const initialNodes = [
         id: '1',
         type: 'editable',
         data: { 
-            placeholder: "What's on your mind?", 
-            isRoot: true,
-            context: "root"
+            label: '',
+            context: '',
+            body: '',
+            isRoot: true
         },
         position: { x: 250, y: 50 },
         parentId: null,
@@ -42,9 +43,10 @@ export function useMindMapLogic() {
         id: newId,
         type: 'editable',
         data: { 
-          placeholder: `Node ${newId}`, 
-          isRoot: false,
-          context: `node-${newId}`
+          label: '',
+          context: '',
+          body: '',
+          isRoot: false
         },
         position: { x: 0, y: 0 },
         parentId,

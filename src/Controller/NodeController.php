@@ -13,13 +13,13 @@ final class NodeController extends AbstractController
     #[Route('/save', name: 'api_node_save', methods: ['POST'])]
     public function saveNode(Request $request): JsonResponse
     {
-        // Получаем данные из запроса
+        // Get data from request
         $data = json_decode($request->getContent(), true);
         
-        // Логируем полученные данные для отладки
+        // Log received data for debugging
         error_log('Received node data: ' . json_encode($data, JSON_PRETTY_PRINT));
         
-        // Возвращаем полученные данные обратно для проверки
+        // Return received data back for verification
         return new JsonResponse([
             'status' => 'success',
             'message' => 'Data received successfully',

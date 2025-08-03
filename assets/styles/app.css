@@ -200,6 +200,20 @@ body {
   border: 1px solid #dee2e6;
 }
 
+.ai-progress {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.ai-progress span {
+  background-color: #007bff;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
 .ai-question {
   margin-bottom: 16px;
 }

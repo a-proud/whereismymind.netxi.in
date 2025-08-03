@@ -16,7 +16,9 @@ npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
 .env.dev
+.env
 
 /.vscode
 /.idea
 public/cgi-bin/php.fastcgi
+

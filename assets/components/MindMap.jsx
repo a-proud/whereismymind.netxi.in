@@ -22,8 +22,8 @@ export function MindMap() {
   const [activeNodeId, setActiveNodeId] = useState(null);
 
   // AI state
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [aiOptions, setAiOptions] = useState([]);
+  const [aiQuestions, setAiQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
 
@@ -42,23 +42,19 @@ export function MindMap() {
     setModalVisible(true);
   }, []);
 
-  const handleAiRequest = useCallback(async () => {
+  const handleAiRequest = useCallback(async (responseType) => {
     if (!activeNodeId) return;
-    
     setIsAiLoading(true);
     try {
-      const result = await api.aiRequest(activeNodeId, 'options');
-      console.log('AI response:', result);
-      
-      setAiQuestion(result.question);
-      setAiOptions(result.options);
+      const result = await api.aiRequest(modalBody, modalContext, activeNodeId, responseType);
+      setAiQuestions(result.questions);
+      setCurrentQuestionIndex(0);
     } catch (error) {
       console.error('Failed to get AI response:', error);
-      alert('Error getting AI response!');
     } finally {
       setIsAiLoading(false);
     }
-  }, [activeNodeId]);
+  }, [activeNodeId, modalBody, modalContext]);
 
   const handleModalSave = () => {
     if (!activeNodeId) return;
@@ -134,34 +130,46 @@ export function MindMap() {
                 ></button>
               </div>
                               <div className="modal-body">
-                  {/* AI Section */}
-                  {aiQuestion && (
-                    <div className="ai-section">
-                      <div className="ai-question">
-                        <h6>AI Question:</h6>
-                        <p>{aiQuestion}</p>
-                      </div>
-                      <div className="ai-options">
-                        <h6>Options:</h6>
-                        <div className="ai-options-grid">
-                          {aiOptions.map((option, index) => (
-                            <button
-                              key={index}
-                              className="btn btn-outline-primary ai-option-btn"
-                              onClick={() => {
-                                console.log('Selected option:', option);
+                                  {/* AI Section */}
+                {aiQuestions.length > 0 && currentQuestionIndex < aiQuestions.length && (
+                  <div className="ai-section">
+                    <div className="ai-progress">
+                      <span>Question {currentQuestionIndex + 1} of {aiQuestions.length}</span>
+                    </div>
+                    <div className="ai-question">
+                      <h6>AI Question:</h6>
+                      <p>{aiQuestions[currentQuestionIndex].question}</p>
+                    </div>
+                    <div className="ai-options">
+                      <h6>Options:</h6>
+                      <div className="ai-options-grid">
+                        {aiQuestions[currentQuestionIndex].options.map((option, index) => (
+                          <button
+                            key={index}
+                            className="btn btn-outline-primary ai-option-btn"
+                            onClick={() => {
+                              console.log('Selected option:', option);
+                              
+                              if (option === 'Next ->') {
+                                const nextIndex = currentQuestionIndex + 1;
+                                if (nextIndex < aiQuestions.length) {
+                                  setCurrentQuestionIndex(nextIndex);
+                                } else {
+                                  setAiQuestions([]);
+                                  setCurrentQuestionIndex(0);
+                                }
+                              } else {
                                 setModalBody(prev => prev + '\n\n' + option);
-                                setAiQuestion('');
-                                setAiOptions([]);
-                              }}
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
+                              }
+                            }}
+                          >
+                            {option}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
                   
                   {/* Node Data Section */}
                   <div className="node-data">
@@ -171,7 +179,7 @@ export function MindMap() {
                         <button
                           type="button"
                           className="btn btn-outline-primary btn-sm"
-                          onClick={handleAiRequest}
+                          onClick={() => handleAiRequest('simple_qna')}
                           disabled={isAiLoading}
                           title="Ask AI"
                         >

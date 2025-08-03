@@ -19,6 +19,29 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+    
+    App\Service\AI\PromptBuilderFactory:
+        arguments:
+            $prompts: '%ai_prompts%'
+
+    App\Service\AI\AIService:
+        calls:
+            - method: addProvider
+              arguments:
+                  - '@App\Service\AI\CohereAIProvider'
+            - method: addProvider
+              arguments:
+                  - '@App\Service\AI\GroqAIProvider'
+
+    App\Service\AI\CohereAIProvider:
+        arguments:
+            $cohereApiKey: '%env(COHERE_API_KEY)%'
+        tags: ['app.ai_provider']
+
+    App\Service\AI\GroqAIProvider:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+        tags: ['app.ai_provider']
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

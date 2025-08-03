@@ -56,10 +56,10 @@ export const api = {
     /**
      * Sends AI request for node
      * @param {string} nodeId - node ID
-     * @param {string} responseType - 'text' or 'options'
+     * @param {string} responseType - 'text' or 'simple_qna'
      * @returns {Promise<Object>} - AI response
      */
-    async aiRequest(nodeId, responseType = 'options') {
+    async aiRequest(body, context, nodeId, responseType = 'text') {
         try {
             const response = await fetch('/api/nodes/ai-request', {
                 method: 'POST',
@@ -68,6 +68,8 @@ export const api = {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
+                    body: body,
+                    context: context,
                     node_id: nodeId,
                     response_type: responseType
                 })

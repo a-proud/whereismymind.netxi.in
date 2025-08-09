@@ -84,5 +84,41 @@ export const api = {
             console.error('Error making AI request:', error);
             throw error;
         }
+    },
+
+    /**
+     * Extract theses with summaries using AI from raw body
+     * @param {string} body
+     * @param {string} nodeId
+     * @returns {Promise<Array<{text:string, summary:string}>>}
+     */
+    async aiThesisExtract(body, nodeId) {
+        try {
+            const response = await fetch('/api/nodes/ai-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    body: body,
+                    node_id: nodeId,
+                    response_type: 'thesis_extract'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return {
+                theses: data?.theses || [],
+                label: (data && data.meta && typeof data.meta.label === 'string') ? data.meta.label : ''
+            };
+        } catch (error) {
+            console.error('Error making thesis extract AI request:', error);
+            throw error;
+        }
     }
 }; 

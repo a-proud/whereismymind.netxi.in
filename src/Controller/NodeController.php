@@ -52,7 +52,7 @@ final class NodeController extends AbstractController
             $aiResponse = ['questions' => $aiResponse];
         }
 
-        if ($data['response_type'] == 'simple_qna') {
+         if ($data['response_type'] == 'simple_qna') {
             $questions = [];
             $questionId = 1;
             $aiResponse = preg_replace('/^.*?(Q:)/s', '$1', $aiResponse);
@@ -81,9 +81,53 @@ final class NodeController extends AbstractController
             $aiResponse = ['questions' => $questions];
         }
 
+        if (($data['response_type'] ?? null) === 'thesis_extract') {
+            // Build prompt with explicit JSON input wrapper to reduce LLM confusion
+            $raw = (string)($data['body'] ?? '');
+            $inputWrapper = json_encode(['text' => $raw], JSON_UNESCAPED_UNICODE);
+            $prompt = $this->aiService->buildPrompt($inputWrapper, $data['provider_name'] ?? 'groq')
+                ->addModifier('response_type', 'thesis_extract')
+                ->addModifier('language', 'ru')
+                ->build();
+
+            $rawResp = $this->aiService->request($prompt);
+            $decoded = json_decode(trim($rawResp), true);
+            $label = null;
+            $theses = [];
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                // New object format: { label: string, theses: [{text, summary}] }
+                if (isset($decoded['theses']) && is_array($decoded['theses'])) {
+                    foreach ($decoded['theses'] as $item) {
+                        if (is_array($item)) {
+                            $theses[] = [
+                                'text' => isset($item['text']) ? (string)$item['text'] : '',
+                                'summary' => isset($item['summary']) ? (string)$item['summary'] : '',
+                            ];
+                        }
+                    }
+                } else {
+                    // Backward compatibility: array of items
+                    foreach ($decoded as $item) {
+                        if (is_array($item)) {
+                            $theses[] = [
+                                'text' => isset($item['text']) ? (string)$item['text'] : '',
+                                'summary' => isset($item['summary']) ? (string)$item['summary'] : '',
+                            ];
+                        }
+                    }
+                }
+                if (isset($decoded['label']) && is_string($decoded['label'])) {
+                    $label = (string)$decoded['label'];
+                }
+            }
+            $aiResponse = ['theses' => $theses, 'meta' => ['label' => $label]];
+        }
+
         $response = [
             'status' => 'success',
             'questions' => $aiResponse['questions'] ?? [],
+            'theses' => $aiResponse['theses'] ?? null,
+            'meta' => $aiResponse['meta'] ?? null,
             'node_id' => $data['node_id'] ?? null,
             'response_type' => $data['response_type'] ?? 'options'
         ];

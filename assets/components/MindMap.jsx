@@ -34,6 +34,45 @@ export function MindMap() {
     setter(e.target.value);
   };
 
+  // Helpers for thesis handling
+  const hashString = (s) => {
+    let hash = 5381;
+    for (let i = 0; i < s.length; i += 1) {
+      hash = ((hash << 5) + hash) ^ s.charCodeAt(i);
+    }
+    return (hash >>> 0).toString(16);
+  };
+
+  const stopwords = new Set([
+    // RU stopwords (subset)
+    'и','в','во','не','что','он','на','я','с','со','как','а','то','все','она','так','его','но','да','ты','к','у','же','вы','за','бы','по','только','ее','мне','было','вот','от','меня','еще','нет','о','из','ему','теперь','когда','даже','ну','вдруг','ли','если','уже','или','ни','быть','был','него','до','вас','нибудь','опять','уж','вам','ведь','там','потом','себя','ничего','ей','может','они','тут','где','есть','надо','ней','для','мы','тебя','их','чем','была','сам','чтоб','без','будто','чего','раз','тоже','себе','под','будет','ж','тогда','кто','этот','того','потому','этого','какой','совсем','ним','здесь','этом','один','почти','мой','тем','чтобы','нее','сейчас','были','куда','зачем','всех','никогда','можно','при','наконец','два','об','другой','хоть','после','над','больше','тот','через','эти','нас','про','всего','них','какая','много','разве','три','эту','моя','впрочем','хорошо','свою','этой','перед','иногда','лучше','чуть','том','нельзя','такой','им','более','всегда','конечно','всю','между',
+    // EN stopwords (subset)
+    'the','a','an','and','or','but','if','then','else','this','that','these','those','of','to','in','on','for','with','as','by','from','at','is','are','was','were','be','been','being','it','its','into','about','over','after','before','up','down','out','not','no','yes','do','did','does','done','can','could','should','would','will','may','might','we','you','they','he','she','i','me','my','our','your','their'
+  ]);
+
+  const summarizeText = (text, maxWords = 7) => {
+    const cleaned = (text || '')
+      .replace(/\s+/g, ' ')
+      .replace(/["'`()\[\]{}<>]/g, '')
+      .trim();
+    const firstClause = cleaned.split(/[.!?;\n]/)[0] || '';
+    const tokens = firstClause.split(/\s+/).filter(Boolean);
+    const meaningful = tokens.filter((t) => t.length > 2 && !stopwords.has(t.toLowerCase()));
+    const picked = (meaningful.length ? meaningful : tokens).slice(0, Math.max(3, Math.min(maxWords, 8)));
+    return picked.join(' ').trim();
+  };
+
+  const extractExistingBracketed = (body) => {
+    const segments = [];
+    const re = /\[\[(.*?)\]\]/gs;
+    let match;
+    while ((match = re.exec(body)) !== null) {
+      segments.push((match[1] || '').trim());
+    }
+    return segments;
+  };
+  const buildBracketedBody = (segments) => segments.map((s) => `[[${s}]]`).join('\n\n');
+
   const openModal = useCallback((data, nodeId) => {
     setModalLabel(data.label || '');
     setModalContext(data.context || '');
@@ -59,21 +98,61 @@ export function MindMap() {
   const handleModalSave = () => {
     if (!activeNodeId) return;
 
-    setNodes((prev) =>
-      prev.map((node) =>
-        node.id === activeNodeId
-          ? { 
-              ...node, 
-              data: { 
-                ...node.data, 
-                label: modalLabel,
-                context: modalContext,
-                body: modalBody
-              } 
-            }
-          : node
-      )
-    );
+    (async () => {
+      const currentNode = nodes.find((n) => n.id === activeNodeId);
+      const prevTheses = (currentNode && currentNode.data && currentNode.data.theses) || [];
+      const prevByKey = new Map(prevTheses.map((t) => [t.key, t]));
+
+      const existingBracketed = extractExistingBracketed(modalBody);
+      let extracted = { theses: [], label: '' };
+      try {
+        // AI-based logical segmentation with summaries
+        extracted = await api.aiThesisExtract(modalBody, activeNodeId);
+      } catch (e) {
+        extracted = { theses: [], label: '' };
+      }
+
+      // If AI returned nothing, fallback to existing bracketed or whole body
+      const segments = (extracted.theses.length > 0 ? extracted.theses.map((x) => x.text) : (existingBracketed.length > 0 ? existingBracketed : [(modalBody || '').trim()])).filter(Boolean);
+
+      const newTheses = segments.map((seg, idx) => {
+        const key = hashString(seg);
+        const existing = prevByKey.get(key);
+        const aiSummary = extracted.theses[idx]?.summary || extracted.theses.find((x) => x.text === seg)?.summary || '';
+        return existing && existing.text === seg
+          ? existing
+          : { key, text: seg, thesis: (aiSummary || summarizeText(seg)) };
+      });
+
+      const nextContext = newTheses
+        .map((t) => (t.thesis || '').trim())
+        .filter(Boolean)
+        .join('; ');
+
+      const nextBody = buildBracketedBody(segments);
+
+      let nextLabel = (modalLabel || currentNode?.data?.label || '').trim();
+      if (!nextLabel && typeof extracted.label === 'string' && extracted.label.trim()) {
+        nextLabel = extracted.label.trim();
+      }
+
+      setNodes((prev) =>
+        prev.map((node) =>
+          node.id === activeNodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  label: nextLabel,
+                  context: nextContext,
+                  body: nextBody,
+                  theses: newTheses,
+                },
+              }
+            : node
+        )
+      );
+    })();
 
     setModalVisible(false);
     setActiveNodeId(null);

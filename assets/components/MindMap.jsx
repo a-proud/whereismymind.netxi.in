@@ -85,7 +85,7 @@ export function MindMap() {
     if (!activeNodeId) return;
     setIsAiLoading(true);
     try {
-      const result = await api.aiRequest(modalBody, modalContext, activeNodeId, responseType);
+      const result = await api.aiRequest(modalBody, nodes, activeNodeId, responseType);
       setAiQuestions(result.questions);
       setCurrentQuestionIndex(0);
     } catch (error) {
@@ -93,7 +93,7 @@ export function MindMap() {
     } finally {
       setIsAiLoading(false);
     }
-  }, [activeNodeId, modalBody, modalContext]);
+  }, [activeNodeId, modalBody, nodes]);
 
   const handleModalSave = () => {
     if (!activeNodeId) return;
@@ -107,7 +107,7 @@ export function MindMap() {
       let extracted = { theses: [], label: '' };
       try {
         // AI-based logical segmentation with summaries
-        extracted = await api.aiThesisExtract(modalBody, activeNodeId);
+        extracted = await api.aiThesisExtract(modalBody, nodes, activeNodeId);
       } catch (e) {
         extracted = { theses: [], label: '' };
       }

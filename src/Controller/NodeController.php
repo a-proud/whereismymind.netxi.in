@@ -40,6 +40,20 @@ final class NodeController extends AbstractController
 
         $userPrompt = ($data['body'] ?? '') . ' ' . ($data['context'] ?? '');
         
+        // Handle cascading contexts with priorities
+        $contexts = $data['contexts'] ?? [];
+        if (!empty($contexts)) {
+            $contextModifier = '';
+            foreach ($contexts as $ctx) {
+                if (isset($ctx['context']) && isset($ctx['priority'])) {
+                    $contextModifier .= "Приоритет {$ctx['priority']}: {$ctx['context']}\n";
+                }
+            }
+            if ($contextModifier) {
+                $userPrompt = $contextModifier . "\n" . $userPrompt;
+            }
+        }
+        
         $prompt = $this->aiService->buildPrompt($userPrompt, $data['provider_name'] ?? 'groq')
             ->addModifier('response_type', $data['response_type'])
             ->addModifier('language', 'ru')
@@ -85,6 +99,16 @@ final class NodeController extends AbstractController
             // Build prompt with explicit JSON input wrapper to reduce LLM confusion
             $raw = (string)($data['body'] ?? '');
             $inputWrapper = json_encode(['text' => $raw], JSON_UNESCAPED_UNICODE);
+            
+            // Add contexts to the input wrapper
+            $contexts = $data['contexts'] ?? [];
+            if (!empty($contexts)) {
+                $inputWrapper = json_encode([
+                    'text' => $raw,
+                    'contexts' => $contexts
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            
             $prompt = $this->aiService->buildPrompt($inputWrapper, $data['provider_name'] ?? 'groq')
                 ->addModifier('response_type', 'thesis_extract')
                 ->addModifier('language', 'ru')

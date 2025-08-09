@@ -27,40 +27,58 @@ export const api = {
     },
 
     /**
-     * Gets full context of node including parents
+     * Gets full context of node including parents with priorities
      * @param {Array} nodes - array of all nodes
      * @param {string} nodeId - node ID
-     * @returns {string} - full context
+     * @returns {Array<{context: string, priority: number}>} - context with priorities
      */
     getFullContext(nodes, nodeId) {
         const node = nodes.find(n => n.id === nodeId);
-        if (!node) return '';
+        if (!node) return [];
         
-        let context = node.data.context || '';
-        let parentId = node.parentId;
+        const contexts = [];
+        let current = node;
+        let priority = 10; // Current node has highest priority
         
-        // Add context of all parents
-        while (parentId) {
-            const parent = nodes.find(n => n.id === parentId);
+        // Add current node context
+        if (current.data.context && current.data.context.trim()) {
+            contexts.push({
+                context: current.data.context.trim(),
+                priority: priority
+            });
+        }
+        
+        // Add parent contexts with decreasing priority
+        while (current.parentId) {
+            const parent = nodes.find(n => n.id === current.parentId);
             if (parent) {
-                context = (parent.data.context || '') + ' > ' + context;
-                parentId = parent.parentId;
+                priority -= 2; // Each level up reduces priority by 2
+                if (parent.data.context && parent.data.context.trim()) {
+                    contexts.push({
+                        context: parent.data.context.trim(),
+                        priority: priority
+                    });
+                }
+                current = parent;
             } else {
                 break;
             }
         }
         
-        return context;
+        return contexts;
     },
 
     /**
-     * Sends AI request for node
+     * Sends AI request for node with cascading context
+     * @param {string} body - detailed information text from the node
+     * @param {Array} nodes - full nodes array from React Flow state
      * @param {string} nodeId - node ID
-     * @param {string} responseType - 'text' or 'simple_qna'
+     * @param {string} responseType - 'text' | 'simple_qna'
      * @returns {Promise<Object>} - AI response
      */
-    async aiRequest(body, context, nodeId, responseType = 'text') {
+    async aiRequest(body, nodes, nodeId, responseType = 'text') {
         try {
+            const contexts = this.getFullContext(nodes, nodeId);
             const response = await fetch('/api/nodes/ai-request', {
                 method: 'POST',
                 headers: {
@@ -69,7 +87,7 @@ export const api = {
                 },
                 body: JSON.stringify({
                     body: body,
-                    context: context,
+                    contexts: contexts,
                     node_id: nodeId,
                     response_type: responseType
                 })
@@ -89,11 +107,13 @@ export const api = {
     /**
      * Extract theses with summaries using AI from raw body
      * @param {string} body
+     * @param {Array} nodes
      * @param {string} nodeId
-     * @returns {Promise<Array<{text:string, summary:string}>>}
+     * @returns {Promise<{theses: Array, label: string}>}
      */
-    async aiThesisExtract(body, nodeId) {
+    async aiThesisExtract(body, nodes, nodeId) {
         try {
+            const contexts = this.getFullContext(nodes, nodeId);
             const response = await fetch('/api/nodes/ai-request', {
                 method: 'POST',
                 headers: {
@@ -102,6 +122,7 @@ export const api = {
                 },
                 body: JSON.stringify({
                     body: body,
+                    contexts: contexts,
                     node_id: nodeId,
                     response_type: 'thesis_extract'
                 })

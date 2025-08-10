@@ -27,6 +27,32 @@ export const api = {
     },
 
     /**
+     * Gets available AI providers
+     * @returns {Promise<Array<string>>} - list of provider names
+     */
+    async getAIProviders() {
+        try {
+            const response = await fetch('/api/nodes/ai-providers', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data?.providers || [];
+        } catch (error) {
+            console.error('Error getting AI providers:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Gets full context of node including parents with priorities
      * @param {Array} nodes - array of all nodes
      * @param {string} nodeId - node ID
@@ -74,9 +100,10 @@ export const api = {
      * @param {Array} nodes - full nodes array from React Flow state
      * @param {string} nodeId - node ID
      * @param {string} responseType - 'text' | 'simple_qna'
+     * @param {string} provider - AI provider name (optional)
      * @returns {Promise<Object>} - AI response
      */
-    async aiRequest(body, nodes, nodeId, responseType = 'text') {
+    async aiRequest(body, nodes, nodeId, responseType = 'text', provider = null) {
         try {
             const contexts = this.getFullContext(nodes, nodeId);
             const response = await fetch('/api/nodes/ai-request', {
@@ -89,7 +116,8 @@ export const api = {
                     body: body,
                     contexts: contexts,
                     node_id: nodeId,
-                    response_type: responseType
+                    response_type: responseType,
+                    provider_name: provider
                 })
             });
 
@@ -109,9 +137,10 @@ export const api = {
      * @param {string} body
      * @param {Array} nodes
      * @param {string} nodeId
+     * @param {string} provider - AI provider name (optional)
      * @returns {Promise<{theses: Array, label: string}>}
      */
-    async aiThesisExtract(body, nodes, nodeId) {
+    async aiThesisExtract(body, nodes, nodeId, provider = null) {
         try {
             const contexts = this.getFullContext(nodes, nodeId);
             const response = await fetch('/api/nodes/ai-request', {
@@ -124,7 +153,8 @@ export const api = {
                     body: body,
                     contexts: contexts,
                     node_id: nodeId,
-                    response_type: 'thesis_extract'
+                    response_type: 'thesis_extract',
+                    provider_name: provider
                 })
             });
 

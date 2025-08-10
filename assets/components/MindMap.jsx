@@ -96,7 +96,7 @@ export function MindMap() {
       }
     } catch (error) {
       console.error('Failed to fetch AI providers:', error);
-      setAvailableProviders(['groq', 'cohere']); // Fallback
+      setAvailableProviders(['groq', 'cohere', 'gemini']); // Fallback
     }
   }, [selectedProvider]);
 

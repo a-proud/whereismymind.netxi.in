@@ -32,6 +32,14 @@ services:
             - method: addProvider
               arguments:
                   - '@App\Service\AI\GroqAIProvider'
+            - method: addProvider
+              arguments:
+                  - '@App\Service\AI\GeminiAIProvider'
+    
+    App\Service\AI\GeminiAIProvider:
+        arguments:
+            $geminiApiKey: '%env(GEMINI_API_KEY)%'
+        tags: ['app.ai_provider']
 
     App\Service\AI\CohereAIProvider:
         arguments:
@@ -42,6 +50,8 @@ services:
         arguments:
             $groqApiKey: '%env(GROQ_API_KEY)%'
         tags: ['app.ai_provider']
+
+    
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

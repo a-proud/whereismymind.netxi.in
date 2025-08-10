@@ -26,7 +26,7 @@ export function updateSubtreeHeights(nodes, parentId) {
  */
 export function layoutSubtree(nodes, rootId, startX, startY) {
   const layouted = [...nodes];
-  const spacingY = 100;
+  const spacingY = 150;
   const spacingX = 200;
 
 /**

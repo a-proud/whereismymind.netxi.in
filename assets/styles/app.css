@@ -276,3 +276,7 @@ body {
   font-size: 0.85em;
   padding: 4px 8px;
 }
+
+.modal-dialog .modal-footer {
+  z-index: 1000;
+}

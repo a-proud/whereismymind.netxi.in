@@ -70,34 +70,7 @@ final class NodeController extends AbstractController
                 $aiResponse = ['questions' => $aiResponse];
             }
 
-             if ($data['response_type'] == 'simple_qna') {
-                $questions = [];
-                $questionId = 1;
-                $aiResponse = preg_replace('/^.*?(Q:)/s', '$1', $aiResponse);
-                // Split by question blocks (Q: ...)
-                preg_match_all('/Q:\s*((?:(?!^\s*Q:\s).*\n?)*)/mu', $aiResponse, $questionBlocks);
-                
-                foreach ($questionBlocks[1] as $block) {
-                    $lines = explode("\n", trim($block));
-                    $question = trim($lines[0] ?? '');
-                    $options = [];
-                    for ($i = 1; $i < count($lines); $i++) {
-                        $line = trim($lines[$i]);
-                        if (preg_match('/^\s*-\s*(.+)$/', $line, $match)) {
-                            $options[] = trim($match[1]);
-                        }
-                    }
-                    if ($question && !empty($options)) {
-                        $questions[] = [
-                            'id' => $questionId++,
-                            'question' => $question,
-                            'options' => array_merge($options, ['Next ->'])
-                        ];
-                    }
-                }
-                
-                $aiResponse = ['questions' => $questions];
-            }
+
 
             if (($data['response_type'] ?? null) === 'thesis_extract') {
                 // Build prompt with explicit JSON input wrapper to reduce LLM confusion

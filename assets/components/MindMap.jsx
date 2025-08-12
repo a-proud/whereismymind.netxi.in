@@ -31,10 +31,7 @@ export function MindMap() {
   const [availableProviders, setAvailableProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState('groq');
 
-  // AI state (legacy for simple_qna)
-  const [aiQuestions, setAiQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isAiLoading, setIsAiLoading] = useState(false);
+
 
   const handleModalInput = (setter) => (e) => {
     setter(e.target.value);
@@ -100,19 +97,7 @@ export function MindMap() {
     }
   }, [selectedProvider]);
 
-  const handleAiRequest = useCallback(async (responseType) => {
-    if (!activeNodeId) return;
-    setIsAiLoading(true);
-    try {
-      const result = await api.aiRequest(modalBody, nodes, activeNodeId, responseType, selectedProvider);
-      setAiQuestions(result.questions);
-      setCurrentQuestionIndex(0);
-    } catch (error) {
-      console.error('Failed to get AI response:', error);
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [activeNodeId, modalBody, nodes, selectedProvider]);
+
 
   // Chat functionality
   const sendChatMessage = useCallback(async () => {
@@ -402,15 +387,6 @@ export function MindMap() {
                         <div className="mb-3">
                           <div className="d-flex justify-content-between align-items-center mb-2">
                             <label className="form-label fw-bold mb-0">Detailed Information</label>
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => handleAiRequest('simple_qna')}
-                              disabled={isAiLoading}
-                              title="Ask AI for questions"
-                            >
-                              {isAiLoading ? '⏳' : '❓'} Get Questions
-                            </button>
                           </div>
                           <textarea
                             className="form-control"
@@ -422,39 +398,7 @@ export function MindMap() {
                           />
                         </div>
                         
-                        {/* Legacy AI Questions Section */}
-                        {aiQuestions.length > 0 && currentQuestionIndex < aiQuestions.length && (
-                          <div className="mb-3 p-3 border rounded bg-light">
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                              <span className="badge bg-primary">Question {currentQuestionIndex + 1} of {aiQuestions.length}</span>
-                            </div>
-                            <h6>AI Question:</h6>
-                            <p className="mb-2">{aiQuestions[currentQuestionIndex].question}</p>
-                            <div className="d-flex flex-wrap gap-1">
-                              {aiQuestions[currentQuestionIndex].options.map((option, index) => (
-                                <button
-                                  key={index}
-                                  className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => {
-                                    if (option === 'Next ->') {
-                                      const nextIndex = currentQuestionIndex + 1;
-                                      if (nextIndex < aiQuestions.length) {
-                                        setCurrentQuestionIndex(nextIndex);
-                                      } else {
-                                        setAiQuestions([]);
-                                        setCurrentQuestionIndex(0);
-                                      }
-                                    } else {
-                                      setModalBody(prev => prev + '\n\n' + option);
-                                    }
-                                  }}
-                                >
-                                  {option}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+
                       </div>
                     </div>
                   </div>

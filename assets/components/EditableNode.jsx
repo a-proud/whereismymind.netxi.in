@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { api } from '../utils/api';
 
 export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }) {
   const [label, setLabel] = useState(data.label || '');
   const [context, setContext] = useState(data.context || '');
   const [body, setBody] = useState(data.body || '');
-  const [isSaving, setIsSaving] = useState(false);
+
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -21,29 +20,7 @@ export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }
     setter(e.target.value);
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const nodeData = {
-        id,
-        label,
-        context,
-        body,
-        timestamp: new Date().toISOString()
-      };
-      
-      const result = await api.saveNode(nodeData);
-      console.log('Node saved successfully:', result);
-      
-      // Can add notification for successful save
-      alert('Node saved successfully!');
-    } catch (error) {
-      console.error('Failed to save node:', error);
-      alert('Error saving node!');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+
 
 
 
@@ -83,14 +60,7 @@ export function EditableNode({ id, data, addChildNode, removeNode, onEditClick }
         >
           ✏️
         </button>
-        <button
-          className="editable-node__btn editable-node__btn--save"
-          onClick={handleSave}
-          disabled={isSaving}
-          title="Save node"
-        >
-          {isSaving ? '⏳' : '💾'}
-        </button>
+
         <button
           className="editable-node__btn"
           onClick={() => addChildNode(id)}

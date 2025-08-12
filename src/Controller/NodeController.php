@@ -148,6 +148,19 @@ final class NodeController extends AbstractController
                         $label = (string)$decoded['label'];
                     }
                 }
+                
+                // Fallback: if no label was extracted, generate one from the first thesis or raw text
+                if (empty($label)) {
+                    if (!empty($theses) && !empty($theses[0]['summary'])) {
+                        $label = $theses[0]['summary'];
+                    } elseif (!empty($raw)) {
+                        // Extract first few meaningful words from raw text
+                        $words = preg_split('/\s+/', trim($raw));
+                        $label = implode(' ', array_slice($words, 0, 4));
+                    } else {
+                        $label = 'Новый узел';
+                    }
+                }
                 $aiResponse = ['theses' => $theses, 'meta' => ['label' => $label]];
             }
 

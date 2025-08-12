@@ -196,6 +196,19 @@ export function MindMap() {
       if (!nextLabel && typeof extracted.label === 'string' && extracted.label.trim()) {
         nextLabel = extracted.label.trim();
       }
+      
+      // Fallback: if still no label, generate from first thesis or modal body
+      if (!nextLabel) {
+        if (extracted.theses && extracted.theses.length > 0 && extracted.theses[0].summary) {
+          nextLabel = extracted.theses[0].summary;
+        } else if (modalBody && modalBody.trim()) {
+          // Extract first few words from modal body
+          const words = modalBody.trim().split(/\s+/);
+          nextLabel = words.slice(0, 4).join(' ');
+        } else {
+          nextLabel = 'Новый узел';
+        }
+      }
 
       setNodes((prev) =>
         prev.map((node) =>

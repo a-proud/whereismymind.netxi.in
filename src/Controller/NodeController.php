@@ -137,8 +137,32 @@ final class NodeController extends AbstractController
                 $aiResponse = ['theses' => $theses, 'meta' => ['label' => $label]];
             }
 
-            // For 'text' response type, return the raw AI response
+            // For 'text' response type, handle chat with history
             if (($data['response_type'] ?? null) === 'text') {
+                $chatHistory = $data['chat_history'] ?? [];
+                
+                // If we have chat history, format it as a conversation for all providers
+                if (!empty($chatHistory)) {
+                    $conversation = '';
+                    foreach ($chatHistory as $message) {
+                        $role = $message['role'] ?? 'user';
+                        $content = $message['content'] ?? '';
+                        if ($role === 'user') {
+                            $conversation .= "User: " . $content . "\n";
+                        } else {
+                            $conversation .= "Assistant: " . $content . "\n";
+                        }
+                    }
+                    $conversation .= "User: " . $userPrompt . "\n";
+                    
+                    $prompt = $this->aiService->buildPrompt($conversation, $data['provider_name'] ?? 'groq')
+                        ->addModifier('response_type', 'text')
+                        ->addModifier('language', 'ru')
+                        ->build();
+                    
+                    $aiResponse = $this->aiService->request($prompt);
+                }
+                
                 $aiResponse = ['text' => (string)$aiResponse];
             }
 

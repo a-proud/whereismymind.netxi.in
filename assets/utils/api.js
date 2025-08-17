@@ -101,9 +101,10 @@ export const api = {
      * @param {string} nodeId - node ID
      * @param {string} responseType - 'text' | 'simple_qna'
      * @param {string} provider - AI provider name (optional)
+     * @param {Array} chatHistory - array of chat messages (optional)
      * @returns {Promise<Object>} - AI response
      */
-    async aiRequest(body, nodes, nodeId, responseType = 'text', provider = null) {
+    async aiRequest(body, nodes, nodeId, responseType = 'text', provider = null, chatHistory = null) {
         try {
             const contexts = this.getFullContext(nodes, nodeId);
             const response = await fetch('/api/nodes/ai-request', {
@@ -117,7 +118,8 @@ export const api = {
                     contexts: contexts,
                     node_id: nodeId,
                     response_type: responseType,
-                    provider_name: provider
+                    provider_name: provider,
+                    chat_history: chatHistory
                 })
             });
 

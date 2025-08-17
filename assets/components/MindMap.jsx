@@ -26,6 +26,11 @@ export function MindMap() {
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef(null);
+  
+  // Text selection state
+  const [selectedText, setSelectedText] = useState('');
+  const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
+  const [showSelectionButtons, setShowSelectionButtons] = useState(false);
 
   // AI provider state
   const [availableProviders, setAvailableProviders] = useState([]);
@@ -111,8 +116,14 @@ export function MindMap() {
     setIsChatLoading(true);
     
     try {
-      // Send chat request with context from nodes and current body
-      const result = await api.aiRequest(modalBody + '\n\nUser question: ' + userMessage, nodes, activeNodeId, 'text', selectedProvider);
+      // Get last 8 messages for chat history (excluding the current user message)
+      const chatHistory = chatMessages.slice(-8).map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+      
+      // Send chat request with context from nodes, current body, and chat history
+      const result = await api.aiRequest(modalBody + '\n\nUser question: ' + userMessage, nodes, activeNodeId, 'text', selectedProvider, chatHistory);
       const aiResponse = result.response || result.text || 'Sorry, I could not generate a response.';
       
       // Add AI response to chat
@@ -123,7 +134,7 @@ export function MindMap() {
     } finally {
       setIsChatLoading(false);
     }
-  }, [chatInput, activeNodeId, modalBody, nodes, selectedProvider]);
+  }, [chatInput, activeNodeId, modalBody, nodes, selectedProvider, chatMessages]);
 
   const handleChatKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
@@ -140,6 +151,56 @@ export function MindMap() {
   React.useEffect(() => {
     scrollToBottom();
   }, [chatMessages]);
+
+  // Add event listeners for text selection
+  React.useEffect(() => {
+    document.addEventListener('mouseup', handleTextSelection);
+    document.addEventListener('click', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleTextSelection);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [handleTextSelection, handleClickOutside]);
+
+  // Text selection handlers
+  const handleTextSelection = useCallback(() => {
+    const selection = window.getSelection();
+    const selectedText = selection.toString().trim();
+    
+    if (selectedText && selectedText.length > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      setSelectedText(selectedText);
+      setSelectionPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10
+      });
+      setShowSelectionButtons(true);
+    } else {
+      setShowSelectionButtons(false);
+      setSelectedText('');
+    }
+  }, []);
+
+  const handleAddToDetailedInfo = useCallback(() => {
+    if (selectedText) {
+      setModalBody(prev => {
+        const currentText = prev.trim();
+        return currentText ? `${currentText}\n\n${selectedText}` : selectedText;
+      });
+      setShowSelectionButtons(false);
+      setSelectedText('');
+    }
+  }, [selectedText]);
+
+  const handleClickOutside = useCallback((e) => {
+    if (!e.target.closest('.selection-buttons') && !e.target.closest('.chat-message')) {
+      setShowSelectionButtons(false);
+      setSelectedText('');
+    }
+  }, []);
 
   const handleModalSave = () => {
     if (!activeNodeId) return;
@@ -304,7 +365,7 @@ export function MindMap() {
                         )}
                         
                         {chatMessages.map((message, index) => (
-                          <div key={index} className={`mb-3 ${message.type === 'user' ? 'text-end' : ''}`}>
+                          <div key={index} className={`mb-3 chat-message ${message.type === 'user' ? 'text-end' : ''}`}>
                             <div className={`d-inline-block p-2 rounded ${message.type === 'user' ? 'bg-primary text-white' : 'bg-light'}`} style={{ maxWidth: '80%' }}>
                               {message.content}
                             </div>
@@ -426,6 +487,29 @@ export function MindMap() {
       )}
 
       {modalVisible && <div className="modal-backdrop fade show"></div>}
+      
+      {/* Text selection buttons */}
+      {showSelectionButtons && selectedText && (
+        <div 
+          className="selection-buttons position-fixed"
+          style={{
+            left: `${selectionPosition.x}px`,
+            top: `${selectionPosition.y}px`,
+            transform: 'translateX(-50%)',
+            zIndex: 9999
+          }}
+        >
+          <div className="btn-group btn-group-sm">
+            <button
+              className="btn btn-primary"
+              onClick={handleAddToDetailedInfo}
+              title="Add to Detailed Information"
+            >
+              📝 Add to Details
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

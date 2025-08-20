@@ -3,18 +3,7 @@
 {% block title %}Mind Map{% endblock %}
 
 {% block body %}
-  <div id="mindmap"></div>
-  <div
-  class="modal fade"
-  id="globalEditModal"
-  tabIndex="-1"
-  aria-labelledby="globalEditModalLabel"
-  aria-hidden="true"
->
-
-{% endblock %}
-
-{% block javascripts %}
-  {{ parent() }}
-  {{ encore_entry_script_tags('app') }}
+<div class="container-fluid py-4">
+    <div id="mindmap"></div>
+</div>
 {% endblock %}
